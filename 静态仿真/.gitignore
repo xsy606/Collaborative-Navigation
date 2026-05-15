@@ -1,0 +1,11 @@
+paper_outputs/
+*.log
+*.asv
+*.mlx.autosave
+*.tmp
+*.bak
+*.fig
+*.png
+*.mat
+slprj/
+*.slxc
