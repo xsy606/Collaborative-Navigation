@@ -127,12 +127,10 @@ sgtitle(sprintf('Figure 6  Spatial precision map, \\sigma_{GNSS}=%.2f m', sigma_
 
 new_paper_figure('Fig6_best_family_regions', [120 120 860 650]);
 hold on; box on;
-imagesc(xGrid, yGrid, bestIdx);
+bestRgb = local_best_rgb(bestIdx, familyColors);
+image(xGrid, yGrid, bestRgb);
 set(gca,'YDir','normal');
 axis equal tight;
-colormap(gca, familyColors);
-cb = colorbar('Ticks',1:3,'TickLabels',familyName);
-cb.Label.String = 'Best family class';
 contour(X, Y, bestRmse, 10, ...
     'Color',[0.12 0.12 0.12], ...
     'LineWidth', 0.7);
@@ -148,12 +146,49 @@ contour(X, Y, bestIdx, [1.5 2.5], ...
     'LineWidth', 1.0, ...
     'HandleVisibility','off');
 
+hLeg = gobjects(numel(families)+1,1);
+for iFam = 1:numel(families)
+    hLeg(iFam) = scatter(nan, nan, 90, 's', ...
+        'MarkerFaceColor', familyColors(iFam,:), ...
+        'MarkerEdgeColor', 'w', ...
+        'LineWidth', 0.8, ...
+        'DisplayName', sprintf('%s best', familyName{iFam}));
+end
+hLeg(end) = scatter(nan, nan, 95, 'p', ...
+    'MarkerFaceColor', [0.85 0.05 0.05], ...
+    'MarkerEdgeColor', 'w', ...
+    'LineWidth', 0.9, ...
+    'DisplayName','AUV reference');
+
 xlabel('AUV relative x / m');
 ylabel('AUV relative y / m');
 title('Best family regions under equal nominal settings');
-subtitle('Discrete colors encode winner class, not RMSE magnitude');
-legend('Location','eastoutside');
+subtitle('Region color directly indicates the winning family');
+legend(hLeg, 'Location','eastoutside');
 apply_axis_style(gca);
+
+new_paper_figure('Fig6_best_family_masks', [150 150 1180 390]);
+tiledlayout(1,3,'TileSpacing','compact','Padding','compact');
+for iFam = 1:numel(families)
+    nexttile; hold on; box on;
+    mask = bestIdx == iFam;
+    imagesc(xGrid, yGrid, double(mask));
+    set(gca,'YDir','normal');
+    colormap(gca, [0.94 0.95 0.96; familyColors(iFam,:)]);
+    clim([0 1]);
+    contour(X, Y, bestRmse, [cfg.requirement.rmse_xy cfg.requirement.rmse_xy], ...
+        'Color',[0.18 0.18 0.18], 'LineStyle','--', 'LineWidth', 1.2);
+    scatter(0, 0, 95, 'p', ...
+        'MarkerFaceColor', [0.85 0.05 0.05], ...
+        'MarkerEdgeColor', 'w', ...
+        'LineWidth', 0.9);
+    xlabel('AUV relative x / m');
+    ylabel('AUV relative y / m');
+    title(sprintf('%s-winning region', familyName{iFam}));
+    axis equal tight;
+    apply_axis_style(gca);
+end
+sgtitle('Winner masks: each panel shows where one family is best');
 
 assignin('base','fig6_spatial_precision_out',OUT);
 
@@ -182,4 +217,16 @@ x = sort(x(:));
 hiIdx = max(1, min(numel(x), round(0.95 * numel(x))));
 hi = x(hiIdx);
 lim = [0, max(hi, eps)];
+end
+
+function rgb = local_best_rgb(bestIdx, familyColors)
+rgb = zeros([size(bestIdx), 3]);
+for iFam = 1:size(familyColors,1)
+    mask = bestIdx == iFam;
+    for c = 1:3
+        layer = rgb(:,:,c);
+        layer(mask) = familyColors(iFam,c);
+        rgb(:,:,c) = layer;
+    end
+end
 end

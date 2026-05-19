@@ -67,3 +67,11 @@
 - `main_paper_geometry_fairness('tune')` passed.
 - `main_fig6_spatial_precision_map` passed.
 - `main_run_smoke_tests` passed.
+
+### Follow-up adjustment
+
+- Excluded the `line` family from the centered-target fairness experiment so
+  the wedge/polygon comparison is not visually dominated by line's known
+  center degeneracy.
+- Replaced the Figure 6 best-family display with a direct RGB class map and
+  added per-family winner masks to make the winning regions easier to read.

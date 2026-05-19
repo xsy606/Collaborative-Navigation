@@ -15,7 +15,6 @@ else
 end
 
 families = {'line','wedge','polygon'};
-familyName = {'Line','Wedge','Polygon'};
 N = cfg.example.N;
 beta_deg = cfg.example.beta_deg;
 sigma_gnss = cfg.meas.gnss_sigma_default;
@@ -39,8 +38,10 @@ OUT.footprintGrid = footprintGrid;
 OUT.avgDistanceGrid = avgGrid;
 OUT.fixedFootprintTable = local_experiment_fixed_footprint( ...
     cfg, families, N, beta_deg, sigma_gnss, footprintGrid);
+centerFamilies = {'wedge','polygon'};
+centerFamilyName = {'Wedge','Polygon'};
 OUT.centerTargetTable = local_experiment_center_target( ...
-    cfg, families, N, beta_deg, sigma_gnss, median(footprintGrid));
+    cfg, centerFamilies, N, beta_deg, sigma_gnss, median(footprintGrid));
 OUT.meanDistanceTable = local_experiment_mean_distance( ...
     cfg, families, N, beta_deg, sigma_gnss, avgGrid);
 
@@ -57,7 +58,7 @@ disp('===== Geometry fairness C: fixed mean anchor distance =====');
 disp(local_best_by_constraint(OUT.meanDistanceTable, 'mean_anchor_distance'));
 
 local_plot_fixed_footprint(OUT.fixedFootprintTable, families, cfg);
-local_plot_center_target(OUT.centerTargetTable, families, familyName, cfg);
+local_plot_center_target(OUT.centerTargetTable, centerFamilies, centerFamilyName, cfg);
 local_plot_mean_distance(OUT.meanDistanceTable, families, cfg);
 
 end

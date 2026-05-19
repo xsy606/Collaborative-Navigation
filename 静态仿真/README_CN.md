@@ -45,7 +45,7 @@ paper_outputs/YYYYMMDD_HHMMSS/
    将三类编队缩放到相同最大锚点间距。如果 polygon 在该设置下改善，说明原先 wedge 的优势可能来自尺度不公平。
 
 2. 实验 B：目标严格放在编队中心。
-   分别测试 `center-stationary` 和 `center-moving`。若静止中心下 polygon 更接近各向同性，而运动后 wedge 变强，说明动态目标轨迹会削弱 polygon 的中心包围优势。
+   分别测试 `center-stationary` 和 `center-moving`，且只比较 wedge 与 polygon，不加入 line，避免 line 在中心退化造成纵轴尺度失真。若静止中心下 polygon 更接近各向同性，而运动后 wedge 变强，说明动态目标轨迹会削弱 polygon 的中心包围优势。
 
 3. 实验 C：固定平均锚点距离。
    将三类编队缩放到与 AUV 相同的平均水平距离。如果结果明显变化，说明原始实验可能受“锚点整体更近”影响。
@@ -55,6 +55,8 @@ paper_outputs/YYYYMMDD_HHMMSS/
 `Fig6_spatial_precision_maps` 中颜色只表示 RMSE，USV 锚点改为中性黑色，避免与 RMSE 色标混淆。
 
 `Fig6_best_family_regions` 中颜色表示最佳 family 类别，不表示 RMSE 大小；该图不再叠加三族 USV 锚点，因为三族编队不是同时部署的。
+
+`Fig6_best_family_masks` 将 line、wedge、polygon 的获胜区域拆成三个分面图，避免单张分类图中边界和图例混在一起看不清。
 
 ## 验证建议
 
