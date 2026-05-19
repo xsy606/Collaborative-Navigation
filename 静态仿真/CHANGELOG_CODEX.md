@@ -37,3 +37,33 @@
   `main_paper_baseline_ablation('tune')`,
   `main_paper_pareto_analysis('tune')`, and
   `main_scheme3_mc_verify_paper('tune')`.
+
+## 2026-05-19
+
+### Geometry fairness diagnostics
+
+- Added `main_paper_geometry_fairness.m` with three diagnostic experiments:
+  fixed footprint, centered target, and fixed mean anchor distance.
+- Added reusable geometry helpers for footprint, mean anchor distance, and
+  scale normalization.
+- Added `evaluate_anchor_geometry.m` for custom anchor layouts without going
+  through the `s`-based formation generator.
+
+### Figure 6 revision
+
+- Revised `main_fig6_spatial_precision_map.m` so RMSE heat maps use neutral
+  USV markers and the best-family map uses discrete class colors only.
+- Removed the misleading overlay of all three family anchor sets from the
+  best-family region figure.
+
+### Documentation
+
+- Added `README_CN.md` and updated `RESULT_FIGURE_GUIDE_CN.md` with the new
+  fairness experiments and Figure 6 interpretation notes.
+
+### Verification
+
+- `checkcode` passed for the new/modified fairness and Figure 6 files.
+- `main_paper_geometry_fairness('tune')` passed.
+- `main_fig6_spatial_precision_map` passed.
+- `main_run_smoke_tests` passed.

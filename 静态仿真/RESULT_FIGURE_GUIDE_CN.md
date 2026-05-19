@@ -50,6 +50,22 @@
 
 预期结果：polygon 或 wedge 通常在 AUV 位于编队包围区域或开口覆盖区域附近更有优势；line 在某些方向上可能有局部优势，但整体各向异性更强。白色虚线目标等值线可用来判断哪些空间区域满足定位精度要求。
 
+说明：`Fig6_spatial_precision_maps` 中颜色表示 RMSE 大小，USV 锚点使用中性黑色，避免把 family 颜色误读成 RMSE 色标。`Fig6_best_family_regions` 中颜色表示最佳 family 类别，不表示 RMSE 大小；该图不再叠加三族 USV 锚点，因为三族编队并不是同时部署的。
+
+## Geometry Fairness: Wedge/Polygon 公平性诊断
+
+入口脚本：`main_paper_geometry_fairness.m`
+
+含义：补充三组实验解释为什么某些原始设置下 wedge 可能优于 polygon。
+
+实验 A 固定 footprint：将 line、wedge、polygon 缩放到相同最大锚点间距，再比较 RMSE。若 polygon 明显改善或超过 wedge，说明原先固定 `s` 的设置可能让 wedge 获得了更大的实际尺度。
+
+实验 B 目标在中心：将目标严格放在编队中心，并分为 `center-stationary` 和 `center-moving` 两种情况。若静止中心下 polygon 的 RMSE 或误差椭圆轴比更优，而从中心运动后 wedge 变强，说明动态模型和目标运动方向改变了“中心包围”的优势。
+
+实验 C 固定平均锚点距离：将三类编队缩放到与 AUV 相同的平均水平距离，再比较 RMSE。若结果变化明显，说明原始比较中可能存在“某个编队整体离 AUV 更近”的距离偏置。
+
+预期结果：在目标严格位于 polygon 中心且角度分布均匀时，polygon/circular 的 FIM 应更接近各向同性，因此误差椭圆轴比应更接近 1。wedge 可能在目标偏离中心或沿某一方向运动时取得接近甚至更好的局部效果。
+
 ## Scheme 1: 多场景离线设计规则
 
 入口脚本：`main_scheme1_offline.m`

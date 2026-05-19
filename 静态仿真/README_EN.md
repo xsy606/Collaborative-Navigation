@@ -44,6 +44,7 @@ The `util/save_experiment_artifacts.m` helper saves:
 ## Key Entry Points
 
 - `main_fig1_ellipse_paper.m` to `main_fig6_spatial_precision_map.m`
+- `main_paper_geometry_fairness.m`
 - `main_scheme1_offline.m`
 - `main_paper_baseline_ablation.m`
 - `main_paper_noise_sensitivity.m`
@@ -68,6 +69,10 @@ Paper-oriented scripts use the shared helpers in `viz/`:
 - Reworked `main_scheme1_offline.m` to use compact one-pass design tables
   in paper mode, avoiding the previous full-record persistent cache that
   could exhaust MATLAB memory.
+- Added `main_paper_geometry_fairness.m` with fixed-footprint, centered-target,
+  and fixed-mean-distance diagnostics for wedge-vs-polygon fairness.
+- Revised Figure 6 so RMSE heat-map colors are not mixed with family marker
+  colors, and the best-family map no longer overlays all three USV formations.
 - `main_paper_run_all.m` now saves figures immediately after each section,
   so earlier figures are not lost when later scripts call `close all`.
 - Added `RESULT_FIGURE_GUIDE_CN.md` with the meaning and expected trend of

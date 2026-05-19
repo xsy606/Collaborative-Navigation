@@ -42,6 +42,10 @@ fprintf('\n========== Paper Figure 6 ==========\n');
 OUT.fig6 = main_fig6_spatial_precision_map();
 OUT.savedFigures = [OUT.savedFigures; local_save_and_close(figDir, 'fig6_')];
 
+fprintf('\n========== Paper Geometry Fairness ==========\n');
+OUT.geometryFairness = main_paper_geometry_fairness('paper');
+OUT.savedFigures = [OUT.savedFigures; local_save_and_close(figDir, 'geometry_fairness_')];
+
 fprintf('\n========== Paper Scheme 1 ==========\n');
 OUT.scheme1 = main_scheme1_offline('paper');
 OUT.savedFigures = [OUT.savedFigures; local_save_and_close(figDir, 'scheme1_')];
@@ -91,6 +95,11 @@ tables = struct();
 if isfield(OUT, 'scheme1') && isfield(OUT.scheme1, 'summaryTable')
     tables.scheme1_summary_table = OUT.scheme1.summaryTable;
 end
+if isfield(OUT, 'geometryFairness')
+    tables.geometry_fairness_fixed_footprint = OUT.geometryFairness.fixedFootprintTable;
+    tables.geometry_fairness_center_target = OUT.geometryFairness.centerTargetTable;
+    tables.geometry_fairness_mean_distance = OUT.geometryFairness.meanDistanceTable;
+end
 if isfield(OUT.baseline, 'baselineTable')
     tables.baseline_table = OUT.baseline.baselineTable;
 end
@@ -117,6 +126,15 @@ end
 function local_write_tables(OUT, tableDir)
 if isfield(OUT, 'scheme1') && isfield(OUT.scheme1, 'summaryTable')
     writetable(OUT.scheme1.summaryTable, fullfile(tableDir, 'scheme1_summary_table.csv'));
+end
+
+if isfield(OUT, 'geometryFairness')
+    writetable(OUT.geometryFairness.fixedFootprintTable, ...
+        fullfile(tableDir, 'geometry_fairness_fixed_footprint.csv'));
+    writetable(OUT.geometryFairness.centerTargetTable, ...
+        fullfile(tableDir, 'geometry_fairness_center_target.csv'));
+    writetable(OUT.geometryFairness.meanDistanceTable, ...
+        fullfile(tableDir, 'geometry_fairness_mean_distance.csv'));
 end
 
 if isfield(OUT.baseline, 'baselineTable')
@@ -166,7 +184,8 @@ fprintf(fid, '  2. Robust fixed-strategy selection under GNSS degradation.\n');
 fprintf(fid, '  3. Parameter sensitivity: range noise and process noise.\n');
 fprintf(fid, '  4. Monte Carlo EKF verification against dynamic BCRLB.\n');
 fprintf(fid, '  5. Automatic export of figures and CSV tables.\n');
-fprintf(fid, '  6. Spatial precision maps showing where each formation family is advantageous.\n\n');
+fprintf(fid, '  6. Spatial precision maps showing where each formation family is advantageous.\n');
+fprintf(fid, '  7. Geometry fairness diagnostics for fixed footprint, centered target, and fixed mean anchor distance.\n\n');
 
 fprintf(fid, 'Output folders\n');
 fprintf(fid, '  figures: %s\n', fullfile(outRoot, 'figures'));

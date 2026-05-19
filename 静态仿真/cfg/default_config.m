@@ -25,7 +25,7 @@ cfg.target.horizon = 180;            % horizon / s
 cfg.target.z = 50;                   % AUV depth / m
 
 % nominal state [x; y; vx; vy]
-cfg.target.nominal_state = [300; 120; 0.6; 0.2];
+cfg.target.nominal_state = [300; 150; 0.6; 0.2];
 
 %% ---------------- Prior ----------------
 cfg.prior.sigma_pos = 8.0;           % m
