@@ -117,6 +117,12 @@ for row = 1:2
         'Margin',6);
 
     % ==============================================================
+    % Figure 1 zoom: error ellipses in local error coordinates
+    % ==============================================================
+    local_plot_error_ellipse_zoom(S, families, sigmaName{row}, row, ...
+        sigma_gnss, footprintRef, fCommon);
+
+    % ==============================================================
     % Figure 1c / 1d: metric bar charts
     % ==============================================================
     new_paper_figure(sprintf('Fig1_%s_metric_bars', sigmaName{row}), [120 120 900 600]);
@@ -160,4 +166,73 @@ for row = 1:2
     ylim([0, 1.22]);
 end
 
+end
+
+function local_plot_error_ellipse_zoom(S, families, sigmaName, row, sigma_gnss, footprintRef, fCommon)
+figName = sprintf('Fig1_%s_error_ellipses_zoom', sigmaName);
+new_paper_figure(figName, [140 140 1120 760]);
+tiledlayout(2,2,'TileSpacing','compact','Padding','compact');
+
+maxMajor = 0;
+for i = 1:numel(families)
+    rec = S.(sprintf('%s_%d', families{i}, row));
+    maxMajor = max(maxMajor, rec.major95);
+end
+axisLim = max(1, maxMajor * 1.18);
+
+nexttile; hold on; box on; grid on;
+for i = 1:numel(families)
+    fam = families{i};
+    rec = S.(sprintf('%s_%d', fam, row));
+    st = family_style(fam);
+    plot_error_ellipse([0;0], rec.Pxy, ...
+        'Color', st.color, ...
+        'LineWidth', 2.4, ...
+        'DisplayName', sprintf('%s 95%% ellipse', st.name));
+end
+local_plot_error_origin();
+xlim([-axisLim axisLim]);
+ylim([-axisLim axisLim]);
+xlabel('x error / m');
+ylabel('y error / m');
+title('Common-scale 95% error ellipses');
+axis equal;
+legend('Location','best');
+apply_axis_style(gca);
+
+for i = 1:numel(families)
+    fam = families{i};
+    rec = S.(sprintf('%s_%d', fam, row));
+    st = family_style(fam);
+
+    nexttile; hold on; box on; grid on;
+    plot_error_ellipse([0;0], rec.Pxy, ...
+        'Color', st.color, ...
+        'LineWidth', 2.6);
+    local_plot_error_origin();
+
+    lim = max(0.8, rec.major95 * 1.28);
+    xlim([-lim lim]);
+    ylim([-lim lim]);
+    xlabel('x error / m');
+    ylabel('y error / m');
+    title(sprintf('%s detail: RMSE %.2f m, axis ratio %.2f', ...
+        st.name, rec.rmse_xy, rec.major95 / max(rec.minor95, eps)));
+    axis equal;
+    apply_axis_style(gca);
+end
+
+sgtitle(sprintf('Figure 1 zoom  Error-ellipse details (%s), \\sigma_{GNSS}=%.2f m, footprint=%.0f m, f=%.2f Hz', ...
+    sigmaName, sigma_gnss, footprintRef, fCommon));
+end
+
+function local_plot_error_origin()
+plot(0, 0, 'p', ...
+    'MarkerSize', 10, ...
+    'MarkerFaceColor', [0.85 0.05 0.05], ...
+    'MarkerEdgeColor','k', ...
+    'LineWidth', 0.8, ...
+    'HandleVisibility','off');
+xline(0, ':', 'Color',[0.55 0.55 0.55], 'HandleVisibility','off');
+yline(0, ':', 'Color',[0.55 0.55 0.55], 'HandleVisibility','off');
 end
