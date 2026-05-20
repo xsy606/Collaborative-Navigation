@@ -54,9 +54,23 @@ paper_outputs/YYYYMMDD_HHMMSS/
 
 `Fig6_spatial_precision_maps` 中颜色只表示 RMSE，USV 锚点改为中性黑色，避免与 RMSE 色标混淆。
 
-`Fig6_best_family_regions` 中颜色表示最佳 family 类别，不表示 RMSE 大小；该图不再叠加三族 USV 锚点，因为三族编队不是同时部署的。
+line 在局部位置会出现几何退化，RMSE 可能远大于 wedge/polygon。脚本会输出 `colorStats` 表，并对显示色标按全局 95% 分位进行截断，图中色标会标注 clipped 上限。
+
+`Fig6_best_family_regions` 中颜色表示最佳 family 类别，不表示 RMSE 大小；该图不再叠加三族 USV 锚点，因为三族编队不是同时部署的。该图使用更密集网格和分类等值填色，并叠加 pairwise RMSE 相等边界，使获胜区域边界更平滑。
 
 `Fig6_best_family_masks` 将 line、wedge、polygon 的获胜区域拆成三个分面图，避免单张分类图中边界和图例混在一起看不清。
+
+## 公平化后的论文图和 Scheme
+
+当前论文版主图已尽量避免直接用相同 `s` 比较不同 family：
+
+- `main_fig1_ellipse_paper.m`：使用固定 footprint 的几何布局。
+- `main_fig2_spacing_paper.m`：论文版改为 footprint 敏感性，而不是相同 `s` 敏感性。
+- `main_fig4_rate_paper.m`：在固定 footprint 下比较声学更新率影响。
+- `main_fig5_gnss_degradation_paper.m`：在固定 footprint 下比较 GNSS 退化影响。
+- `main_scheme1_offline.m`：内部仍用 `s` 网格搜索，但跨 family 图中显示最小 footprint，而不是最小 `s`。
+
+`Scheme2`、`Pareto` 和几何公平性实验已经显式包含 footprint/cost 约束，因此保留原有设计搜索逻辑。
 
 ## 验证建议
 

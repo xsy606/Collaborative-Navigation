@@ -48,6 +48,7 @@ cfg.acoustic.t_sync = 0.15;          % synchronization overhead / s
 %% ---------------- Example design ----------------
 cfg.example.N = 5;
 cfg.example.s = 150;
+cfg.example.footprint = 500;         % m, reference footprint for fair family comparisons
 cfg.example.beta_deg = 80;
 cfg.example.f = 0.6;
 

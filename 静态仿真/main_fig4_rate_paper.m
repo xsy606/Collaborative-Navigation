@@ -8,8 +8,8 @@ cfg = default_config();
 
 families = {'line','wedge','polygon'};
 N = cfg.example.N;
-s = cfg.example.s;
 beta_deg = cfg.example.beta_deg;
+footprintRef = cfg.example.footprint;
 
 sigmaList = [cfg.meas.rtk_sigma, cfg.meas.gnss_sigma_default];
 sigmaName = {'RTK-like','GNSS-degraded'};
@@ -28,8 +28,11 @@ for row = 1:2
     for i = 1:numel(families)
         fam = families{i};
         st = family_style(fam);
+        anchors = build_formation_with_footprint(fam, N, footprintRef, ...
+            struct('beta_deg', beta_deg, 'rot_deg', 0));
 
-        recRef = evaluate_design(fam, N, s, beta_deg, min(fFine), sigmaList(row), cfg, ...
+        recRef = evaluate_anchor_geometry(fam, anchors, beta_deg, ...
+            min(fFine), sigmaList(row), cfg, ...
             'StoreSeries', false);
         fphys = recRef.f_phys_max;
 
@@ -44,13 +47,15 @@ for row = 1:2
             fReq = fFine(k);
 
             if fReq <= fphys
-                rec = evaluate_design(fam, N, s, beta_deg, fReq, sigmaList(row), cfg, ...
+                rec = evaluate_anchor_geometry(fam, anchors, beta_deg, ...
+                    fReq, sigmaList(row), cfg, ...
                     'StoreSeries', false);
                 yFeas(k) = rec.rmse_xy;
             end
 
             fEff = min(fReq, fphys);
-            recCap = evaluate_design(fam, N, s, beta_deg, fEff, sigmaList(row), cfg, ...
+            recCap = evaluate_anchor_geometry(fam, anchors, beta_deg, ...
+                fEff, sigmaList(row), cfg, ...
                 'StoreSeries', false);
             yCap(k) = recCap.rmse_xy;
         end
@@ -87,7 +92,7 @@ for row = 1:2
     xlabel('Requested acoustic update rate / Hz');
     ylabel('Horizontal RMSE lower bound / m');
     title(sprintf('Acoustic update-rate sensitivity (%s)', sigmaName{row}));
-    subtitle('Solid: physically feasible; dashed: capped by physical upper bound');
+    subtitle(sprintf('Footprint-normalized comparison, footprint = %.0f m', footprintRef));
     ylim([0, yAxisMax*1.15]);
     plot_target_band(gca, cfg.requirement.rmse_xy, 'Label','Target RMSE');
 
@@ -111,7 +116,7 @@ end
 
 set(gca, 'XTick', 1:numel(families), 'XTickLabel', {'Line','Wedge','Polygon'});
 ylabel('Physical upper update rate / Hz');
-title('Acoustic physical update-rate upper bounds');
+title(sprintf('Acoustic physical update-rate upper bounds, footprint = %.0f m', footprintRef));
 
 for i = 1:numel(Y)
     text(i, Y(i), sprintf(' %.3f Hz', Y(i)), ...

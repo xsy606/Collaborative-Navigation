@@ -11,6 +11,7 @@ cfg = default_config('paper');
 families = {'line','wedge','polygon'};
 sigmaList = [cfg.meas.rtk_sigma, cfg.meas.gnss_sigma_default];
 sigmaName = {'RTK-like','GNSS-degraded'};
+footprintRef = cfg.example.footprint;
 
 S = struct();
 
@@ -19,7 +20,7 @@ fphysAll = zeros(1, numel(families));
 
 for i = 1:numel(families)
     fam = families{i};
-    A = build_formation(fam, cfg.example.N, cfg.example.s, ...
+    A = build_formation_with_footprint(fam, cfg.example.N, footprintRef, ...
         struct('beta_deg', cfg.example.beta_deg, 'rot_deg', 0));
     fphysAll(i) = acoustic_physical_limit(A, cfg);
 end
@@ -39,9 +40,11 @@ for row = 1:2
     for i = 1:numel(families)
         fam = families{i};
         st = family_style(fam);
+        anchors = build_formation_with_footprint(fam, cfg.example.N, footprintRef, ...
+            struct('beta_deg', cfg.example.beta_deg, 'rot_deg', 0));
 
-        rec = evaluate_design(fam, cfg.example.N, cfg.example.s, ...
-            cfg.example.beta_deg, fCommon, sigma_gnss, cfg, ...
+        rec = evaluate_anchor_geometry(fam, anchors, cfg.example.beta_deg, ...
+            fCommon, sigma_gnss, cfg, ...
             'StoreSeries', false);
 
         S.(sprintf('%s_%d', fam, row)) = rec;
@@ -99,12 +102,13 @@ for row = 1:2
 
     xlabel('x / m');
     ylabel('y / m');
-    title(sprintf('Formation geometry and 95%% error ellipse (%s)', sigmaName{row}));
+    title(sprintf('Footprint-normalized geometry and 95%% error ellipse (%s)', sigmaName{row}));
     axis equal;
     apply_axis_style(gca);
     legend('Location','eastoutside');
 
-    txt = sprintf('\\sigma_{GNSS}=%.2f m, f=%.2f Hz', sigma_gnss, fCommon);
+    txt = sprintf('\\sigma_{GNSS}=%.2f m, footprint=%.0f m, f=%.2f Hz', ...
+        sigma_gnss, footprintRef, fCommon);
     text(0.02, 0.97, txt, ...
         'Units','normalized', ...
         'VerticalAlignment','top', ...
@@ -140,7 +144,7 @@ for row = 1:2
 
     set(gca, 'XTickLabel', {'Line','Wedge','Polygon'});
     ylabel('Normalized value');
-    title(sprintf('Normalized localization metrics (%s)', sigmaName{row}));
+    title(sprintf('Footprint-normalized localization metrics (%s)', sigmaName{row}));
     legend(metricName, 'Location','northoutside', 'Orientation','horizontal');
     apply_axis_style(gca);
 

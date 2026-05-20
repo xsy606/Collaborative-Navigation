@@ -8,15 +8,15 @@ cfg = default_config();
 
 families = {'line','wedge','polygon'};
 N = cfg.example.N;
-s = cfg.example.s;
 beta_deg = cfg.example.beta_deg;
+footprintRef = cfg.example.footprint;
 
 gnssFine = linspace(min(cfg.grid.gnss), max(cfg.grid.gnss), 41);
 
 % Common feasible rate.
 fphysMin = inf;
 for i = 1:numel(families)
-    A = build_formation(families{i}, N, s, ...
+    A = build_formation_with_footprint(families{i}, N, footprintRef, ...
         struct('beta_deg', beta_deg, 'rot_deg', 0));
     fphysMin = min(fphysMin, acoustic_physical_limit(A, cfg));
 end
@@ -38,11 +38,14 @@ best = struct('sigma', gnssFine(1), 'rmse', inf, 'label', "", 'color', [0.1 0.1 
 for i = 1:numel(families)
     fam = families{i};
     st = family_style(fam);
+    anchors = build_formation_with_footprint(fam, N, footprintRef, ...
+        struct('beta_deg', beta_deg, 'rot_deg', 0));
 
     y = nan(size(gnssFine));
 
     for k = 1:numel(gnssFine)
-        rec = evaluate_design(fam, N, s, beta_deg, fCommon, gnssFine(k), cfg, ...
+        rec = evaluate_anchor_geometry(fam, anchors, beta_deg, ...
+            fCommon, gnssFine(k), cfg, ...
             'StoreSeries', false);
         y(k) = rec.rmse_xy;
     end
@@ -72,7 +75,8 @@ end
 xlabel('\sigma_{GNSS} / m');
 ylabel('Horizontal RMSE lower bound / m');
 title('GNSS degradation effect on localization lower bound');
-subtitle(sprintf('Common f = %.2f Hz, N = %d, s = %.0f m', fCommon, N, s));
+subtitle(sprintf('Footprint-normalized comparison, footprint = %.0f m, f = %.2f Hz', ...
+    footprintRef, fCommon));
 ylim([0, yAxisMax*1.15]);
 plot_target_band(gca, cfg.requirement.rmse_xy, 'Label','Target RMSE');
 annotate_best_point(gca, best.sigma, best.rmse, best.label, best.color);

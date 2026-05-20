@@ -17,12 +17,17 @@ for iFam = 1:numel(families)
 end
 
 N = cfg.example.N;
-s = cfg.example.s;
+footprintRef = cfg.example.footprint;
 beta_deg = cfg.example.beta_deg;
 sigma_gnss = cfg.meas.gnss_sigma_default;
 
-xGrid = linspace(-650, 850, 61);
-yGrid = linspace(-650, 650, 53);
+if strcmpi(cfg.run.mode, 'paper')
+    xGrid = linspace(-650, 850, 181);
+    yGrid = linspace(-650, 650, 157);
+else
+    xGrid = linspace(-650, 850, 91);
+    yGrid = linspace(-650, 650, 79);
+end
 
 [X,Y] = meshgrid(xGrid, yGrid);
 
@@ -30,13 +35,14 @@ OUT = struct();
 OUT.xGrid = xGrid;
 OUT.yGrid = yGrid;
 OUT.sigma_gnss = sigma_gnss;
+OUT.footprint = footprintRef;
 
 RMSE = nan([size(X), numel(families)]);
 
 for iFam = 1:numel(families)
     fam = families{iFam};
 
-    A = build_formation(fam, N, s, ...
+    A = build_formation_with_footprint(fam, N, footprintRef, ...
         struct('beta_deg', beta_deg, 'rot_deg', 0));
 
     for ix = 1:numel(xGrid)
@@ -60,7 +66,13 @@ end
 OUT.bestRmse = bestRmse;
 OUT.bestIdx = bestIdx;
 
-mapLim = local_color_limit(RMSE);
+colorStats = local_color_stats(RMSE, families);
+OUT.colorStats = colorStats;
+disp('===== Figure 6 RMSE color-scale diagnostics =====');
+disp(colorStats);
+
+mapLim = [0, max(cfg.requirement.rmse_xy, colorStats.GlobalP95(1))];
+OUT.colorLimit = mapLim;
 
 new_paper_figure('Fig6_spatial_precision_maps', [60 60 1450 760]);
 tiledlayout(2,3,'TileSpacing','compact','Padding','compact');
@@ -71,11 +83,12 @@ for iFam = 1:numel(families)
     st = family_style(fam);
 
     nexttile; hold on; box on;
-    contourf(X, Y, RMSE(:,:,iFam), 32, 'LineColor','none');
+    Z = min(RMSE(:,:,iFam), mapLim(2));
+    contourf(X, Y, Z, 40, 'LineColor','none');
     colormap(gca, parula(256));
     clim(mapLim);
     cb = colorbar;
-    cb.Label.String = 'RMSE / m';
+    cb.Label.String = sprintf('RMSE / m (clipped at %.1f)', mapLim(2));
     contour(X, Y, RMSE(:,:,iFam), [cfg.requirement.rmse_xy cfg.requirement.rmse_xy], ...
         'w--', 'LineWidth', 1.4);
     scatter(A(:,1), A(:,2), 74, ...
@@ -92,6 +105,14 @@ for iFam = 1:numel(families)
     xlabel('AUV relative x / m');
     ylabel('AUV relative y / m');
     title(sprintf('%s RMSE map', familyName{iFam}));
+    if colorStats.Max(iFam) > mapLim(2)
+        text(0.02, 0.96, sprintf('max %.1g m, clipped', colorStats.Max(iFam)), ...
+            'Units','normalized', ...
+            'VerticalAlignment','top', ...
+            'BackgroundColor','w', ...
+            'Margin',4, ...
+            'Color',[0.15 0.15 0.15]);
+    end
     axis equal tight;
     apply_axis_style(gca);
 end
@@ -101,7 +122,8 @@ for iFam = 1:numel(families)
     A = OUT.(fam).anchors;
 
     nexttile; hold on; box on;
-    surf(X, Y, RMSE(:,:,iFam), 'EdgeColor','none');
+    Z = min(RMSE(:,:,iFam), mapLim(2));
+    surf(X, Y, Z, 'EdgeColor','none');
     shading interp;
     colormap(gca, parula(256));
     clim(mapLim);
@@ -116,21 +138,24 @@ for iFam = 1:numel(families)
 
     xlabel('x / m');
     ylabel('y / m');
-    zlabel('RMSE / m');
-    title(sprintf('%s RMSE surface', familyName{iFam}));
+    zlabel(sprintf('RMSE / m (clipped at %.1f)', mapLim(2)));
+    title(sprintf('%s clipped RMSE surface', familyName{iFam}));
     view(45,35);
     grid on;
     apply_axis_style(gca);
 end
 
-sgtitle(sprintf('Figure 6  Spatial precision map, \\sigma_{GNSS}=%.2f m', sigma_gnss));
+sgtitle(sprintf('Figure 6  Fixed-footprint spatial precision map, footprint=%.0f m, \\sigma_{GNSS}=%.2f m', ...
+    footprintRef, sigma_gnss));
 
 new_paper_figure('Fig6_best_family_regions', [120 120 860 650]);
 hold on; box on;
-bestRgb = local_best_rgb(bestIdx, familyColors);
-image(xGrid, yGrid, bestRgb);
+contourf(X, Y, bestIdx, 0.5:1:3.5, ...
+    'LineColor','none');
 set(gca,'YDir','normal');
 axis equal tight;
+colormap(gca, familyColors);
+clim([0.5 3.5]);
 contour(X, Y, bestRmse, 10, ...
     'Color',[0.12 0.12 0.12], ...
     'LineWidth', 0.7);
@@ -143,8 +168,9 @@ scatter(0, 0, 115, 'p', ...
     'DisplayName','AUV reference');
 contour(X, Y, bestIdx, [1.5 2.5], ...
     'Color','w', ...
-    'LineWidth', 1.0, ...
+    'LineWidth', 1.2, ...
     'HandleVisibility','off');
+local_plot_pairwise_boundaries(X, Y, RMSE, familyColors);
 
 hLeg = gobjects(numel(families)+1,1);
 for iFam = 1:numel(families)
@@ -162,8 +188,8 @@ hLeg(end) = scatter(nan, nan, 95, 'p', ...
 
 xlabel('AUV relative x / m');
 ylabel('AUV relative y / m');
-title('Best family regions under equal nominal settings');
-subtitle('Region color directly indicates the winning family');
+title('Best family regions under fixed footprint');
+subtitle(sprintf('Region color indicates the winning family, footprint = %.0f m', footprintRef));
 legend(hLeg, 'Location','eastoutside');
 apply_axis_style(gca);
 
@@ -172,7 +198,8 @@ tiledlayout(1,3,'TileSpacing','compact','Padding','compact');
 for iFam = 1:numel(families)
     nexttile; hold on; box on;
     mask = bestIdx == iFam;
-    imagesc(xGrid, yGrid, double(mask));
+    contourf(X, Y, double(mask), [-0.5 0.5 1.5], ...
+        'LineColor','none');
     set(gca,'YDir','normal');
     colormap(gca, [0.94 0.95 0.96; familyColors(iFam,:)]);
     clim([0 1]);
@@ -188,7 +215,7 @@ for iFam = 1:numel(families)
     axis equal tight;
     apply_axis_style(gca);
 end
-sgtitle('Winner masks: each panel shows where one family is best');
+sgtitle(sprintf('Winner masks under fixed footprint: %.0f m', footprintRef));
 
 assignin('base','fig6_spatial_precision_out',OUT);
 
@@ -206,27 +233,65 @@ catch
 end
 end
 
-function lim = local_color_limit(X)
-x = X(isfinite(X));
+function stats = local_color_stats(RMSE, families)
+nFam = numel(families);
+Family = strings(nFam,1);
+Min = nan(nFam,1);
+Median = nan(nFam,1);
+P90 = nan(nFam,1);
+P95 = nan(nFam,1);
+P99 = nan(nFam,1);
+Max = nan(nFam,1);
+
+for iFam = 1:nFam
+    x = RMSE(:,:,iFam);
+    x = x(isfinite(x));
+    Family(iFam) = string(families{iFam});
+    Min(iFam) = min(x);
+    Median(iFam) = local_quantile(x, 0.50);
+    P90(iFam) = local_quantile(x, 0.90);
+    P95(iFam) = local_quantile(x, 0.95);
+    P99(iFam) = local_quantile(x, 0.99);
+    Max(iFam) = max(x);
+end
+
+allVal = RMSE(isfinite(RMSE));
+GlobalP95 = repmat(local_quantile(allVal, 0.95), nFam, 1);
+GlobalMax = repmat(max(allVal), nFam, 1);
+stats = table(Family, Min, Median, P90, P95, P99, Max, GlobalP95, GlobalMax);
+end
+
+function q = local_quantile(x, alpha)
+x = sort(x(:));
 if isempty(x)
-    lim = [0 1];
+    q = nan;
+    return;
+end
+if numel(x) == 1
+    q = x;
     return;
 end
 
-x = sort(x(:));
-hiIdx = max(1, min(numel(x), round(0.95 * numel(x))));
-hi = x(hiIdx);
-lim = [0, max(hi, eps)];
+pos = 1 + (numel(x)-1)*alpha;
+lo = floor(pos);
+hi = ceil(pos);
+if lo == hi
+    q = x(lo);
+else
+    q = x(lo) + (x(hi)-x(lo)) * (pos-lo);
+end
 end
 
-function rgb = local_best_rgb(bestIdx, familyColors)
-rgb = zeros([size(bestIdx), 3]);
-for iFam = 1:size(familyColors,1)
-    mask = bestIdx == iFam;
-    for c = 1:3
-        layer = rgb(:,:,c);
-        layer(mask) = familyColors(iFam,c);
-        rgb(:,:,c) = layer;
-    end
+function local_plot_pairwise_boundaries(X, Y, RMSE, familyColors)
+pairs = [1 2; 1 3; 2 3];
+for i = 1:size(pairs,1)
+    a = pairs(i,1);
+    b = pairs(i,2);
+    C = 0.5 * (familyColors(a,:) + familyColors(b,:));
+    contour(X, Y, RMSE(:,:,a) - RMSE(:,:,b), [0 0], ...
+        'Color', max(min(C * 0.7, 1), 0), ...
+        'LineWidth', 1.1, ...
+        'LineStyle','-', ...
+        'HandleVisibility','off');
 end
 end

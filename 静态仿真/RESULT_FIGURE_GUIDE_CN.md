@@ -6,7 +6,7 @@
 
 入口脚本：`main_fig1_ellipse_paper.m`
 
-含义：展示 line、wedge、polygon 三类 USV 编队在 RTK-like 和 GNSS-degraded 条件下的几何布局、AUV 位置、声学测距视线以及 95% 定位误差椭圆。
+含义：展示 line、wedge、polygon 三类 USV 编队在 RTK-like 和 GNSS-degraded 条件下的几何布局、AUV 位置、声学测距视线以及 95% 定位误差椭圆。当前论文版使用固定 footprint，而不是固定 `s`，以避免 wedge 和 polygon 因实际尺度不同产生不公平比较。
 
 预期结果：GNSS 锚点误差增大时，所有编队误差椭圆都会变大。line 编队通常方向性最强，椭圆更容易拉长；wedge 和 polygon 对二维几何约束更均衡，误差椭圆更圆、更稳定。该图主要支撑“编队几何直接影响可观测性和误差各向异性”的论述。
 
@@ -14,9 +14,9 @@
 
 入口脚本：`main_fig2_spacing_paper.m`
 
-含义：扫描 USV 相邻间距 `s`，比较不同编队在共同可行声学更新率下的水平 RMSE 下界。图中的浅绿色区域表示满足目标 RMSE 的区间，星形标注表示当前曲线组中的最优点。
+含义：论文版已改为扫描编队 footprint，比较不同编队在共同可行声学更新率下的水平 RMSE 下界。图中的浅绿色区域表示满足目标 RMSE 的区间，星形标注表示当前曲线组中的最优点。
 
-预期结果：过小间距会造成几何基线不足，定位精度较差；增大间距通常改善几何约束，但过大间距会受到声学传播周期和更新率上限约束。一般会出现一个中等或偏大的有效间距区间，而不是“越大越好”的单调结论。
+预期结果：过小 footprint 会造成几何基线不足，定位精度较差；增大 footprint 通常改善几何约束，但过大 footprint 会受到声学传播周期和更新率上限约束。一般会出现一个中等或偏大的有效尺度区间，而不是“越大越好”的单调结论。
 
 ## Figure 3: Wedge 开口角敏感性
 
@@ -30,7 +30,7 @@
 
 入口脚本：`main_fig4_rate_paper.m`
 
-含义：展示请求声学更新率对定位下界的影响，并区分物理可行区域和被声学传播周期限制后的 capped 曲线。独立的物理上限图给出每类编队在当前几何下的最大可行更新率。
+含义：展示请求声学更新率对定位下界的影响，并区分物理可行区域和被声学传播周期限制后的 capped 曲线。论文版使用固定 footprint 的几何条件，独立的物理上限图给出每类编队在同一 footprint 下的最大可行更新率。
 
 预期结果：提高声学更新率会降低 RMSE，但收益会逐渐饱和。超过物理上限后，请求频率不再真实可行，因此 solid 曲线会中断，dashed capped 曲线表示按物理上限截断后的理论效果。编队 footprint 越大、USV 数越多，通常物理更新率上限越低。
 
@@ -38,7 +38,7 @@
 
 入口脚本：`main_fig5_gnss_degradation_paper.m`
 
-含义：扫描 USV GNSS 锚点误差，观察定位 RMSE 和对 GNSS 误差的灵敏度。
+含义：扫描 USV GNSS 锚点误差，观察定位 RMSE 和对 GNSS 误差的灵敏度。论文版使用固定 footprint 的几何条件，因此 family 曲线差异主要反映角度分布和动态可观测性，而不是实际尺度差异。
 
 预期结果：GNSS 误差越大，AUV 定位 RMSE 通常单调增大。较好的编队不仅 RMSE 较低，而且灵敏度曲线更平缓。曲线穿过目标 RMSE 的位置可解释为该编队在当前设置下可承受的 GNSS 退化上限。
 
@@ -50,7 +50,7 @@
 
 预期结果：polygon 或 wedge 通常在 AUV 位于编队包围区域或开口覆盖区域附近更有优势；line 在某些方向上可能有局部优势，但整体各向异性更强。白色虚线目标等值线可用来判断哪些空间区域满足定位精度要求。
 
-说明：`Fig6_spatial_precision_maps` 中颜色表示 RMSE 大小，USV 锚点使用中性黑色，避免把 family 颜色误读成 RMSE 色标。`Fig6_best_family_regions` 使用离散 RGB 分类底图，颜色直接表示获胜 family，不表示 RMSE 大小；该图不再叠加三族 USV 锚点，因为三族编队并不是同时部署的。`Fig6_best_family_masks` 将三类 family 的获胜区域拆成三个分面，便于单独观察每一类编队在哪些 AUV 位置上最优。
+说明：`Fig6_spatial_precision_maps` 中颜色表示 RMSE 大小，USV 锚点使用中性黑色，避免把 family 颜色误读成 RMSE 色标。由于 line 在部分位置会出现几何退化，RMSE 可能比 wedge/polygon 高几个数量级，图中会打印 `colorStats` 诊断表，并按全局 95% 分位对显示色标进行截断；这不是 RMSE 和颜色映射错误，而是为了避免 line 极端值把整张图压成一两个颜色。`Fig6_best_family_regions` 使用更密集网格和分类等值填色，颜色直接表示获胜 family，不表示 RMSE 大小；同时叠加 pairwise RMSE 相等边界，使区域边界更接近平滑曲线。`Fig6_best_family_masks` 将三类 family 的获胜区域拆成三个分面，便于单独观察每一类编队在哪些 AUV 位置上最优。
 
 ## Geometry Fairness: Wedge/Polygon 公平性诊断
 
@@ -70,7 +70,7 @@
 
 入口脚本：`main_scheme1_offline.m`
 
-含义：在多个 AUV 方位场景下，寻找满足目标 RMSE 所需的最小间距、最小声学更新率、最小 USV 数量，并估计间距、更新率、数量三类变量的局部重要性。
+含义：在多个 AUV 方位场景下，寻找满足目标 RMSE 所需的最小 footprint、最小声学更新率、最小 USV 数量，并估计几何尺度/间距、更新率、数量三类变量的局部重要性。内部搜索仍保留 `s` 网格，但跨 family 展示改为 footprint，避免直接比较不同 family 的 `s`。
 
 预期结果：GNSS 误差增大时，满足目标精度通常需要更大的几何间距、更高声学更新率或更多 USV。变量重要性反映当前设计附近最敏感的调参方向：若 spacing 重要性高，说明几何尺度是主要瓶颈；若 rate 重要性高，说明声学更新频率是主要瓶颈；若 count 重要性高，说明增加 USV 数量可能更有效。
 

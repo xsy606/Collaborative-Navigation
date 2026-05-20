@@ -42,6 +42,7 @@ for iFam = 1:numel(families)
 
         ok = D.is_feasible & D.rmse_xy <= cfg.requirement.rmse_xy;
         OUT.(fam).minS(ig) = local_min_value(D.s, ok);
+        OUT.(fam).minFootprint(ig) = local_min_value(D.footprint, ok);
         OUT.(fam).minF(ig) = local_min_value(D.f_ac, ok);
         OUT.(fam).minN(ig) = local_min_value(D.N, ok);
 
@@ -77,6 +78,7 @@ end
 
 function S = local_init_family_out(gnssGrid)
 S.minS = nan(size(gnssGrid));
+S.minFootprint = nan(size(gnssGrid));
 S.minF = nan(size(gnssGrid));
 S.minN = nan(size(gnssGrid));
 S.impS = nan(size(gnssGrid));
@@ -127,6 +129,7 @@ Area95 = inf(nRows,1);
 Major95 = inf(nRows,1);
 Minor95 = inf(nRows,1);
 CondNum = inf(nRows,1);
+Footprint = zeros(nRows,1);
 Fphys = zeros(nRows,1);
 Cost = zeros(nRows,1);
 Feasible = false(nRows,1);
@@ -151,6 +154,7 @@ for N = cfg.grid.N
                 Major95(row) = rec.major95;
                 Minor95(row) = rec.minor95;
                 CondNum(row) = rec.condnum;
+                Footprint(row) = rec.footprint;
                 Fphys(row) = rec.f_phys_max;
                 Cost(row) = rec.cost;
                 Feasible(row) = rec.is_feasible;
@@ -161,9 +165,9 @@ for N = cfg.grid.N
 end
 
 D = table(Family,Ncol,Scol,Beta,Fac,Sigma,RMSE,Area95,Major95,Minor95, ...
-    CondNum,Fphys,Cost,Feasible,WorstScenario, ...
+    CondNum,Footprint,Fphys,Cost,Feasible,WorstScenario, ...
     'VariableNames', {'family','N','s','beta_deg','f_ac','sigma_gnss','rmse_xy', ...
-    'area95','major95','minor95','condnum','f_phys_max','cost', ...
+    'area95','major95','minor95','condnum','footprint','f_phys_max','cost', ...
     'is_feasible','worst_scenario_index'});
 end
 
@@ -186,6 +190,7 @@ recAgg.beta_deg = beta;
 recAgg.f_ac = f;
 recAgg.sigma_gnss = sigma_gnss;
 recAgg.anchors = anchors;
+recAgg.footprint = formation_footprint(anchors);
 recAgg.Pxy = nan(2,2);
 recAgg.rmse_xy = inf;
 recAgg.major95 = inf;
@@ -226,6 +231,7 @@ recAgg.rmse_xy = worstRMSE;
 recAgg.f_phys_max = minFphys;
 recAgg.is_feasible = allFeasible;
 recAgg.cost = costVal;
+recAgg.footprint = formation_footprint(recAgg.anchors);
 end
 
 function anchors = local_design_anchors(fam, N, s, beta)
@@ -377,6 +383,7 @@ best.major95 = row.major95;
 best.minor95 = row.minor95;
 best.area95 = row.area95;
 best.condnum = row.condnum;
+best.footprint = row.footprint;
 best.f_phys_max = row.f_phys_max;
 best.is_feasible = row.is_feasible;
 best.cost = row.cost;
@@ -427,6 +434,7 @@ for i = 1:numel(families)
         one.s = b.s;
         one.beta_deg = b.beta_deg;
         one.f_ac = b.f_ac;
+        one.footprint = b.footprint;
         one.f_phys_max = b.f_phys_max;
         one.worst_rmse = b.rmse_xy;
         one.cost = b.cost;
@@ -452,13 +460,13 @@ nexttile; hold on; grid on; box on;
 for iFam = 1:numel(families)
     fam = families{iFam};
     st = family_style(fam);
-    plot(gnssGrid, OUT.(fam).minS, '-o', ...
+    plot(gnssGrid, OUT.(fam).minFootprint, '-o', ...
         'Color', st.color, 'MarkerFaceColor', st.color, ...
         'MarkerSize', 5, 'LineWidth', 2, 'DisplayName', st.name);
 end
 xlabel('\sigma_{GNSS} / m');
-ylabel('Minimum spacing s / m');
-title('Scheme 1(a) Minimum spacing');
+ylabel('Minimum formation footprint / m');
+title('Scheme 1(a) Minimum footprint');
 legend('Location','northwest');
 apply_axis_style(gca);
 
@@ -492,7 +500,7 @@ apply_axis_style(gca);
 nexttile; hold on; grid on; box on;
 plot(gnssGrid, OUT.meanImportance.spacing, '-o', ...
     'Color', pal.navy, 'MarkerFaceColor', pal.navy, ...
-    'LineWidth', 2, 'DisplayName','spacing s');
+    'LineWidth', 2, 'DisplayName','scale / spacing');
 plot(gnssGrid, OUT.meanImportance.rate, '-s', ...
     'Color', pal.green, 'MarkerFaceColor', pal.green, ...
     'LineWidth', 2, 'DisplayName','rate f');

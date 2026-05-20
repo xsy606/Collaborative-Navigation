@@ -66,6 +66,11 @@ Paper-oriented scripts use the shared helpers in `viz/`:
 
 ## Recent Improvements
 
+- Footprint-normalized the main paper comparison figures (`Fig1`, `Fig2`,
+  `Fig4`, and `Fig5`) so wedge and polygon are not compared at different
+  effective formation scales.
+- Updated Scheme 1 plotting to report minimum footprint for cross-family
+  design rules while keeping the original `s` grid internally.
 - Reworked `main_scheme1_offline.m` to use compact one-pass design tables
   in paper mode, avoiding the previous full-record persistent cache that
   could exhaust MATLAB memory.
@@ -74,6 +79,8 @@ Paper-oriented scripts use the shared helpers in `viz/`:
 - Revised Figure 6 so RMSE heat-map colors are not mixed with family marker
   colors, the best-family map uses a direct RGB class image, and separate
   winner masks show each family region independently.
+- Refined Figure 6 again with a denser spatial grid, clipped RMSE color scale
+  diagnostics for line degeneracy, and smoother class-boundary contours.
 - `main_paper_run_all.m` now saves figures immediately after each section,
   so earlier figures are not lost when later scripts call `close all`.
 - Added `RESULT_FIGURE_GUIDE_CN.md` with the meaning and expected trend of

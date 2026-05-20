@@ -75,3 +75,22 @@
   center degeneracy.
 - Replaced the Figure 6 best-family display with a direct RGB class map and
   added per-family winner masks to make the winning regions easier to read.
+
+### Figure 6 color scale refinement
+
+- Increased the spatial map resolution from `61 x 53` to `181 x 157` in paper
+  mode.
+- Added RMSE color-scale diagnostics to show when line-family degeneracy
+  creates extreme values.
+- Clipped displayed RMSE colors at the global 95th percentile while preserving
+  raw RMSE values in `OUT`.
+- Replaced pixel-style winner maps with dense `contourf` class regions and
+  pairwise equal-RMSE boundary contours.
+
+### Footprint-normalized paper conditions
+
+- Updated paper Figure 1, Figure 2, Figure 4, and Figure 5 to use
+  footprint-normalized family comparisons rather than equal `s` comparisons.
+- Updated Scheme 1's cross-family design-rule plot to report minimum
+  footprint instead of minimum `s`, while preserving the original `s` grid as
+  the internal design variable.
